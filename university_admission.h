@@ -5,7 +5,6 @@ class university{
     private:
         int closing, opening;
     public:
-        university(string, int, map<string, int>, int, int);
         bool can_admit(Student&);
         ~university();
 };
