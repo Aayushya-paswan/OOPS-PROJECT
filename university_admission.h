@@ -11,6 +11,7 @@ class university{
 
 class Student{
     private:
+        static int total_students;
         string name;
         int jee_rank;
         int income;
@@ -27,4 +28,24 @@ class Student{
         void print_details();
         bool scholarship_eligible(int, string);
         ~Student();
+};
+
+class branch{
+    private:
+        string Branch;
+        int seats_available;
+        int closing, opening;
+    public:
+        branch(string, int, int, int);
+        bool allocate_seat(Student&);
+        ~branch();
+};
+
+class Hostel{
+    private:
+        
+    public:
+        Hostel(string, int, int);
+        bool allocate_hostel(Student&);
+        ~Hostel();
 };
