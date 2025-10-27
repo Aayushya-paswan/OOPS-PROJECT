@@ -3,17 +3,20 @@ using namespace std;
 
 class university{
     private:
+        int total_seats;
+        vector<Student> admitted_students;
+        static int total_admitted;
         int closing, opening;
     public:
         bool can_admit(Student&);
+        void admit_student(Student&);
+
         ~university();
 };
 
 class Student{
     private:
-        static int total_students;
         string name;
-        int jee_rank;
         int income;
         vector<string> preferred_branch;
         string contact_number;
@@ -22,6 +25,7 @@ class Student{
         string gender;
         string category;
     public:
+        int jee_rank;
         Student(string, int, int, vector<string>, string, int, int, string, string);
         bool is_eligible(int, int);
         void assign_roll();
@@ -41,11 +45,36 @@ class branch{
         ~branch();
 };
 
+
 class Hostel{
     private:
         
     public:
-        Hostel(string, int, int);
-        bool allocate_hostel(Student&);
-        ~Hostel();
+        allocate_room(Student&) = 0;
+};
+
+class Boys_Hostel : public Hostel{
+    private:
+        int total_rooms;
+        int rooms_allocated;
+    public:
+        allocate_room(Student&);
+        ~Boys_Hostel();
+};
+
+class Girls_Hostel : public Hostel{
+    private:
+        int total_rooms;
+        int rooms_allocated;
+    public:
+        allocate_room(Student&);
+        ~Girls_Hostel();
+};
+
+class Admssion_office{
+    private:
+        vector<university> universities;
+    public:
+        void process_applications(vector<Student>&);    // assign hostel and everything
+        ~Admssion_office();
 };
