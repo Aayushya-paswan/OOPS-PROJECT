@@ -3,15 +3,15 @@ using namespace std;
 
 class university{
     private:
-        int total_seats;
         vector<Student> admitted_students;
-        static int total_admitted;
-        int closing, opening;
     public:
-        bool can_admit(Student&);
+        university();
+        int closing, opening;
+        int total_seats;
+        int total_admitted = 0;
         void admit_student(Student&);
 
-        ~university();
+        
 };
 
 class Student{
@@ -20,11 +20,13 @@ class Student{
         int income;
         vector<string> preferred_branch;
         string contact_number;
-        int percentage_12th;
-        int age;
+        int roll;
         string gender;
         string category;
     public:
+    
+        int age;
+        int percentage_12th;
         int jee_rank;
         Student(string, int, int, vector<string>, string, int, int, string, string);
         bool is_eligible(int, int);
@@ -50,7 +52,7 @@ class Hostel{
     private:
         
     public:
-        allocate_room(Student&) = 0;
+        void allocate_room(Student&) = 0;
 };
 
 class Boys_Hostel : public Hostel{
@@ -58,7 +60,7 @@ class Boys_Hostel : public Hostel{
         int total_rooms;
         int rooms_allocated;
     public:
-        allocate_room(Student&);
+        void allocate_room(Student&);
         ~Boys_Hostel();
 };
 
@@ -67,14 +69,13 @@ class Girls_Hostel : public Hostel{
         int total_rooms;
         int rooms_allocated;
     public:
-        allocate_room(Student&);
+        void allocate_room(Student&);
         ~Girls_Hostel();
 };
 
-class Admssion_office{
-    private:
-        vector<university> universities;
+class Admission_office{
+
     public:
-        void process_applications(vector<Student>&);    // assign hostel and everything
-        ~Admssion_office();
+        bool process_applications(Student s,university u);    // assign hostel and everything
+        
 };
