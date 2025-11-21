@@ -1,13 +1,9 @@
-// main.cpp
-// Polished ncurses GUI for your Admission system.
-// Requires: functions.cpp in the same project (provides AdmissionOffice, Student, University, Branch, BoysHostel, GirlsHostel, Mess, CATEGORIES, etc.)
 
 #include "functions.cpp"
 #include <ncurses.h>
 #include <string>
 #include <vector>
 #include <sstream>
-#include <iomanip>
 #include <fstream>
 #include <chrono>
 #include <thread>
@@ -20,7 +16,6 @@
 using namespace std::chrono_literals;
 using namespace std;
 
-// ----------------------------- Globals (wraps types from functions.cpp) -----------------------------
 AdmissionOffice office;
 vector<Student> applicants;
 struct BranchInfo {
@@ -38,7 +33,6 @@ struct UnivInfo {
 };
 vector<UnivInfo> created_univs;
 
-// ----------------------------- Helpers -----------------------------
 template<typename T>
 auto student_contact_try(const T& s, int) -> decltype(std::string(s.get_contact())) {
     return std::string(s.get_contact());
@@ -66,7 +60,6 @@ auto student_contact_try(const T& /*s*/, unsigned) -> std::string {
 
 template<typename T>
 static std::string get_student_contact_safe(const T& s) {
-    // call the overloads in the order above; the first valid overload is chosen
     return student_contact_try(s, 0);
 }
 static void pause_ms(int ms) { std::this_thread::sleep_for(std::chrono::milliseconds(ms)); }
@@ -94,7 +87,6 @@ static void safe_add_university(unique_ptr<University> u, const UnivInfo &ui) {
     created_univs.push_back(ui);
 }
 
-// small progress bar in window
 void draw_progress(WINDOW* w, int y, int x, int width, float frac) {
     int filled = std::max(0, std::min(width, (int)std::round(frac * width)));
     mvwprintw(w, y, x, "[");
@@ -113,7 +105,6 @@ void center_text(WINDOW* w, int row, const string &s, bool bold=false) {
     if (bold) wattroff(w, A_BOLD);
 }
 
-// popup input modal (returns trimmed string)
 string input_modal(const char* title, const char* prompt, int maxlen = 200) {
     int h = 7, w = std::max(60, (int)strlen(prompt)+30);
     int starty = (LINES - h) / 2, startx = (COLS - w) / 2;
@@ -129,7 +120,6 @@ string input_modal(const char* title, const char* prompt, int maxlen = 200) {
     echo();
     curs_set(1);
     char buffer[1024];
-    // read from win with wgetnstr for safety
     mvwgetnstr(win, 4, 4, buffer, maxlen);
     noecho();
     curs_set(0);
@@ -152,25 +142,20 @@ void set_status(const string &msg, int color_pair = 0) {
     refresh();
 }
 
-// pretty table printing into a window
 void print_table(WINDOW* w, int starty, const vector<string> &headers, const vector<vector<string>> &rows, int max_rows_display=-1, int highlight=-1) {
     int cols = getmaxx(w);
     int y = starty;
     wattron(w, A_BOLD);
     mvwprintw(w, y++, 2, "%s", headers[0].c_str());
     wattroff(w, A_BOLD);
-    // simple fixed columns by dividing cols
     int colwidth = std::max(10, (cols - 6) / (int)headers.size());
-    // header row
     mvwprintw(w, y++, 2, "");
     int xpos = 2;
     for (size_t c = 0; c < headers.size(); ++c) {
         mvwprintw(w, y-1, xpos, "%-*s", colwidth, headers[c].substr(0, colwidth).c_str());
         xpos += colwidth + 1;
     }
-    // separator
     mvwaddch(w, y++, 1, ACS_HLINE);
-    // rows
     int rowcount = 0;
     for (size_t r = 0; r < rows.size(); ++r) {
         if (max_rows_display > 0 && rowcount >= max_rows_display) break;
@@ -186,7 +171,6 @@ void print_table(WINDOW* w, int starty, const vector<string> &headers, const vec
     wrefresh(w);
 }
 
-// print reserved map nicely
 string reserved_to_string(const unordered_map<string,int>& m) {
     stringstream ss;
     bool first = true;
@@ -263,7 +247,6 @@ void autoGenerateApplicants() {
                           "9991110006", 90, 18, "Male", "EWS");
 }
 
-// ----------------------------- UI: main panes + menu -----------------------------
 enum MenuItem {
     MENU_SAMPLE = 0,
     MENU_CUSTOM,
@@ -399,7 +382,6 @@ void show_applicants_window(WINDOW* mainwin) {
             break;
         }
     }
-    // clear keypad mode
     keypad(mainwin, FALSE);
 }
 
@@ -423,7 +405,6 @@ void show_universities_window(WINDOW* mainwin) {
         werase(mainwin); box(mainwin, 0, 0);
         center_text(mainwin, 1, "UNIVERSITIES & BRANCHES", true);
 
-        // Count total display lines to calculate pages
         int total_lines = 0;
         for (const auto& u : created_univs) {
             total_lines += 3; // University name + rank info + separator
@@ -434,7 +415,6 @@ void show_universities_window(WINDOW* mainwin) {
         int total_pages = (total_lines + lines_per_page - 1) / lines_per_page;
         if (total_pages == 0) total_pages = 1;
 
-        // Navigation info
         mvwprintw(mainwin, 3, 2, "Page %d/%d - Use Up/Down or PgUp/PgDn to scroll, q to return",
                  page + 1, total_pages);
         mvwprintw(mainwin, 4, 2, "-------------------------------------------------------------------");
@@ -457,11 +437,9 @@ void show_universities_window(WINDOW* mainwin) {
             }
             lines_used += 2;
 
-            // Branches for this university
             for (size_t j = 0; j < u.branches.size(); ++j) {
                 const auto &b = u.branches[j];
 
-                // Branch takes 4 lines: name, seats, rank, reserved
                 if (lines_used >= start_line && lines_used < end_line) {
                     wattron(mainwin, A_BOLD);
                     mvwprintw(mainwin, y++, 6, "- %s", b.name.c_str());
@@ -477,7 +455,7 @@ void show_universities_window(WINDOW* mainwin) {
                 if (y >= mh - 2) break;
             }
 
-            // Separator line (1 line)
+
             if (i < created_univs.size() - 1) {
                 if (lines_used >= start_line && lines_used < end_line && y < mh - 2) {
                     mvwprintw(mainwin, y++, 2, "---");
@@ -541,20 +519,17 @@ void do_process_applications(WINDOW* mainwin) {
         std::this_thread::sleep_for(80ms);
     }
 
-    // Capture the stdout output from process_applications
     std::ostringstream capture;
     std::streambuf* old_buf = std::cout.rdbuf(capture.rdbuf());
 
     office.process_applications(applicants);
 
-    std::cout.rdbuf(old_buf); // Restore original stdout
+    std::cout.rdbuf(old_buf);
 
     set_status("Processing complete. Admissions allocated.", 3);
 
-    // Display the captured output in a clean, organized way
     std::string output = capture.str();
     if (!output.empty()) {
-        // Parse the captured output into lines
         std::istringstream iss(output);
         std::vector<std::string> lines;
         std::string line;
@@ -577,7 +552,6 @@ void do_process_applications(WINDOW* mainwin) {
             werase(mainwin); box(mainwin, 0, 0);
             center_text(mainwin, 1, "PROCESSING RESULTS", true);
 
-            // Show page info
             mvwprintw(mainwin, 3, 2, "Page %d/%d -  use arrow keys to change page, q to return",
                      page + 1, pages);
             mvwaddch(mainwin, 4, 1, ACS_HLINE);
@@ -588,7 +562,6 @@ void do_process_applications(WINDOW* mainwin) {
             for (int i = 0; i < per_page && start_line + i < (int)lines.size(); ++i) {
                 const std::string& current_line = lines[start_line + i];
 
-                // Apply some formatting based on content
                 if (current_line.find("Admitted") != std::string::npos ||
                     current_line.find("SUCCESS") != std::string::npos) {
                     wattron(mainwin, COLOR_PAIR(2)); // Green for success
@@ -601,7 +574,6 @@ void do_process_applications(WINDOW* mainwin) {
 
                 mvwprintw(mainwin, y++, 2, "%.*s", mw - 4, current_line.c_str());
 
-                // Turn off attributes
                 wattroff(mainwin, COLOR_PAIR(1) | COLOR_PAIR(2) | A_BOLD);
 
                 if (y >= mh - 2) break;
@@ -857,14 +829,14 @@ int main() {
     if (has_colors()) {
         start_color();
         use_default_colors();
-        init_pair(1, COLOR_RED, -1);       // error
-        init_pair(2, COLOR_GREEN, -1);     // success
-        init_pair(3, COLOR_CYAN, -1);      // info
-        init_pair(4, COLOR_YELLOW, -1);    // warning
-        init_pair(5, COLOR_MAGENTA, -1);   // accent
+        init_pair(1, COLOR_RED, -1);
+        init_pair(2, COLOR_GREEN, -1);
+        init_pair(3, COLOR_CYAN, -1);
+        init_pair(4, COLOR_YELLOW, -1);
+        init_pair(5, COLOR_MAGENTA, -1);
     }
 
-    // prepare windows: header (3), sidebar (fullheight-3), main (rest), footer (3)
+
     int header_h = 3, footer_h = 3;
     int sidebar_w = 36;
     int main_h = LINES - header_h - footer_h;
@@ -939,9 +911,7 @@ int main() {
                     show_admission_summary(mainwin);
                     break;
                 case MENU_REPORTS:
-                    // --- CLEAN DETAILED REPORT DISPLAY (no stdout clutter) ---
                 {
-                    // 1. Capture output of show_detailed_report()
                     std::ostringstream capture;
                     std::streambuf* old_buf = std::cout.rdbuf(capture.rdbuf());
                     office.show_detailed_report();
@@ -960,7 +930,6 @@ int main() {
                     box(mainwin, 0, 0);
                     center_text(mainwin, 1, "DETAILED REPORTS", true);
 
-                    // 4. Scrollable display of captured text
                     int mh = getmaxy(mainwin), mw = getmaxx(mainwin);
                     int per_page = mh - 6;
                     int page = 0, pages = (lines.size() + per_page - 1) / per_page;
@@ -970,7 +939,7 @@ int main() {
                         werase(mainwin);
                         box(mainwin, 0, 0);
                         center_text(mainwin, 1, "DETAILED REPORTS", true);
-                        mvwprintw(mainwin, 3, 2, "Page %d/%d — ←/→ to scroll, q/Esc to return.", page+1, pages);
+                        mvwprintw(mainwin, 3, 2, "Page %d/%d to scroll, q/Esc to return.", page+1, pages);
                         mvwhline(mainwin, 4, 1, ACS_HLINE, mw-2);
 
                         int start = page * per_page;
@@ -985,7 +954,6 @@ int main() {
                         else if (ch == 'q' || ch == 27) break;
                     }
 
-                    // 5. Restore sidebar & header cleanly
                     clear();
                     refresh();
                     draw_layout(header, sidebar, mainwin, footer, selected);
@@ -1043,13 +1011,11 @@ int main() {
             touchwin(stdscr);
             refresh();
         } else if (ch == KEY_F(2)) {
-            // refresh UI
             draw_layout(header, sidebar, mainwin, footer, selected);
             set_status("Screen refreshed.", 3);
         }
     }
 
-    // goodbye
     werase(mainwin); box(mainwin,0,0);
     center_text(mainwin, 2, "Thank you for using the Admission System", true);
     mvwprintw(mainwin, 4, 2, "Goodbye!");

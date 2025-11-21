@@ -58,7 +58,7 @@ bool Student::is_eligible(int min_percentage_12th, int min_age) const {
     return (percentage_12th >= min_percentage_12th) && (age >= min_age);
 }
 
-void Student::assign_roll() { }
+void Student::assign_roll() {}
 
 void Student::set_admitted(const string& branch) {
     admitted = true;
