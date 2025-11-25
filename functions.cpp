@@ -89,18 +89,22 @@ void Student::allocate_mess(const string& plan) {
 }
 bool Student::has_mess() const { return mess_allocated; }
 const string& Student::get_mess_plan() const { return mess_plan; }
-
+ostream operator<<(ostream& out,Student& s1){
+out<< "| " << setw(4) << s1.roll_number << " | "
+         << setw(20) << s1.left << name.substr(0, 19) << " | "
+         << setw(8) << s1.jee_rank << " | "
+         << setw(6) << s1.percentage_12th << "% | "
+         << setw(4) << s1.age << " | "
+         << setw(6) << s1.gender << " | "
+         << setw(6) << s1.category << " | "
+         << setw(12) << (s1.admitted ? s1.assigned_branch : "Not Admitted") << " | "
+         << setw(6) << (s1.hostel_allocated ? "Yes" : "No") << " | "
+         << setw(8) << (s1.mess_allocated ? s1.mess_plan : "No") << " |" << endl;
+    return out;
+}
+Student x;
 void Student::print_details() const {
-    cout << "| " << setw(4) << roll_number << " | "
-         << setw(20) << left << name.substr(0, 19) << " | "
-         << setw(8) << jee_rank << " | "
-         << setw(6) << percentage_12th << "% | "
-         << setw(4) << age << " | "
-         << setw(6) << gender << " | "
-         << setw(6) << category << " | "
-         << setw(12) << (admitted ? assigned_branch : "Not Admitted") << " | "
-         << setw(6) << (hostel_allocated ? "Yes" : "No") << " | "
-         << setw(8) << (mess_allocated ? mess_plan : "No") << " |" << endl;
+    cout << x;
 }
 
 void Student::print_detailed_info() const {
